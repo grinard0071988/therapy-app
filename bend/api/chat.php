@@ -56,6 +56,9 @@ curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_POST           => true,
     CURLOPT_POSTFIELDS     => $payload,
+    CURLOPT_SSLVERSION     => CURL_SSLVERSION_TLSv1_2,
+    CURLOPT_SSL_VERIFYPEER => false,    // ← TEMPORARY DIAGNOSTIC ONLY
+    CURLOPT_SSL_VERIFYHOST => false, 
     CURLOPT_HTTPHEADER     => [
         "Content-Type: application/json",
         "x-api-key: $ANTHROPIC_API_KEY",
@@ -65,11 +68,11 @@ curl_setopt_array($ch, [
 ]);
 $response = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-//$curlError = curl_error($ch);
+$curlError = curl_error($ch);
 curl_close($ch);
 
 // ── TEMPORARY DEBUG — remove after fixing ──
-//error_log("ANTHROPIC DEBUG: httpCode=$httpCode | curlError=$curlError | key_loaded=" . ($ANTHROPIC_API_KEY ? 'yes' : 'NO - KEY MISSING') . " | response=" . substr($response, 0, 300));
+error_log("ANTHROPIC DEBUG: httpCode=$httpCode | curlError=$curlError | key_loaded=" . ($ANTHROPIC_API_KEY ? 'yes' : 'NO - KEY MISSING') . " | response=" . substr($response, 0, 300));
 
 if (!$response || $httpCode >= 400) {
     error_log("Response: " . substr($response, 0, 1000));
