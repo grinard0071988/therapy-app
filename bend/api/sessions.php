@@ -71,4 +71,41 @@ if ($method === 'PUT') {
     respond(["message" => "Session ended."]);
 }
 
+//   • Only "completed" sessions will be deleted (active sessions are protected), ownership is check too.
+if ($method === 'DELETE') {
+    $user = requireAuth($pdo);
+    $body = input();
+    $sessionId = $body['session_id'] ?? null;
+
+    if (!$sessionId) fail("session_id is required.");
+
+    // ── Fetch the session ──
+    $stmt = $pdo->prepare("SELECT * FROM sessions WHERE id = ?");
+    $stmt->execute([$sessionId]);
+    $session = $stmt->fetch();
+
+    if (!$session) fail("Session not found.", 404);
+
+    // ── Ownership check ──
+    // Regular users can only delete their own sessions.
+    // Admins (view_all_sessions permission) can delete anyone's.
+    if ($session['user_id'] != $user['id'] && !can($user, 'view_all_sessions')) {
+        fail("Forbidden: you can only delete your own sessions.", 403);
+    }
+
+    // ── Status guard ──
+    // Prevent deleting a session that is still active (chat in progress).
+    if ($session['status'] !== 'completed') {
+        fail("Only completed sessions can be deleted. End the session first.", 400);
+    }
+
+    // ── Delete ──
+    // The messages table has ON DELETE CASCADE on session_id, so all messages
+    // for this session are automatically removed with the parent row.
+    $stmt = $pdo->prepare("DELETE FROM sessions WHERE id = ?");
+    $stmt->execute([$sessionId]);
+
+    respond(["message" => "Session deleted successfully."]);
+}
+
 fail("Method not allowed", 405);

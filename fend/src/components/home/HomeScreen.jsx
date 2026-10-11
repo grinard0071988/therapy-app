@@ -59,6 +59,12 @@ export default function HomeScreen({ user, token, onStartSession, onLogout }) {
     }
   };
 
+  //delete a completed session
+  const handleDeleteSession = async (sessionId) => {
+    await SessionsAPI.delete(token, sessionId); // throws on API error
+    setSessions((prev) => prev.filter((s) => s.id !== sessionId));
+  };
+
   // Authorization wall
   if (!can(user, "view_counselors")) {
     return (
@@ -310,6 +316,7 @@ export default function HomeScreen({ user, token, onStartSession, onLogout }) {
                 counselors={counselors}
                 user={user}
                 loading={sessionsLoading}
+                onDelete={handleDeleteSession}
               />
             )}
           </div>

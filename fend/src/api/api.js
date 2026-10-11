@@ -87,6 +87,12 @@ export const SessionsAPI = {
       token,
       body: { session_id: sessionId, topic },
     }),
+  delete: (token, sessionId) =>
+    apiCall("sessions.php", {
+      method: "DELETE",
+      token,
+      body: { session_id: sessionId },
+    }),
 };
 
 // Chat / Messages endpoints
